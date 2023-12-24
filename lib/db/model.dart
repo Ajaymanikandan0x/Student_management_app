@@ -1,17 +1,29 @@
 class Model {
   final String? name;
   final int? age;
-  final int? id;
+  final int? student_id;
   final String? batch;
+  final String? picture;
 
   Model(
       {required this.name,
       required this.age,
-      required this.id,
-      required this.batch});
-  factory Model.fromJson(Map<String, dynamic> json) => Model(
-      name: json['name'],
-      age: json['age'],
-      id: json['id'],
-      batch: json['batch']);
+      required this.student_id,
+      required this.batch,
+      this.picture});
+
+  factory Model.fromMap(Map<String, dynamic> Map) => Model(
+      name: Map['name'],
+      age: Map['age'],
+      student_id: Map['student_id'],
+      batch: Map['batch'],
+      picture: Map['picture']);
+
+  Map<String, dynamic> toMap() => {
+        'name': name,
+        'age': age,
+        'student_id': student_id,
+        'batch': batch,
+        'picture': picture,
+      };
 }

@@ -5,13 +5,16 @@ import 'package:student_app/pages/home.dart';
 import 'package:student_app/pages/login.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(textTheme: GoogleFonts.poppinsTextTheme()),
-      routes: {'/': (context) => Log(),
-      '/home':(context)=>Home(),
-      '/adduser':(context)=>Adduser(),},
+      routes: {
+        '/': (context) => Log(),
+        '/home': (context) => Home(),
+        '/adduser': (context) => Adduser(),
+      },
     ),
   );
 }

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:student_app/db/model.dart';
@@ -24,6 +26,7 @@ class _AdduserState extends State<Adduser> {
   final formKey = GlobalKey<FormState>();
 
   File? selectimg;
+  String? base64Image;
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +54,7 @@ class _AdduserState extends State<Adduser> {
                       ? Image.file(selectimg!)
                       : const Padding(
                           padding: EdgeInsets.all(20),
-                          child: Text('Please select an image'),
-                        ),
+                          child: Icon(Icons.person)),
                 ),
               ),
               sizedbox,
@@ -217,20 +219,6 @@ class _AdduserState extends State<Adduser> {
     height: 15,
   );
 
-  Future<void> add_student(context) async {
-    final _names = name.text.trim();
-    final _age = int.parse(age.text);
-    final _id = int.parse(id.text);
-    final _batch = batch.text;
-    if (_names.isEmpty && _age == null && _id == null && _batch.isEmpty) {
-      return;
-    } else {
-      final model = Model(name: _names, age: _age, id: _id, batch: _batch);
-      addstudent(model);
-      Navigator.pushNamed(context, '/home');
-    }
-  }
-
   Future<void> _getImage() async {
     try {
       final picker = ImagePicker();
@@ -241,13 +229,34 @@ class _AdduserState extends State<Adduser> {
         // No image selected
         return;
       }
-
+      Uint8List imageBytes =
+          await imageselect.readAsBytes(); // Use Uint8List for image bytes
+      String base64Image = base64Encode(imageBytes);
       setState(() {
         selectimg = File(imageselect.path);
+        this.base64Image = base64Image;
       });
     } catch (e) {
       print("Error picking image: $e");
-      // Handle the error, e.g., show a message to the user
+    }
+  }
+
+  Future<void> add_student(context) async {
+    final _names = name.text.trim();
+    final _age = int.parse(age.text);
+    final _id = int.parse(id.text);
+    final _batch = batch.text;
+    if (_names.isEmpty && _age == null && _id == null && _batch.isEmpty) {
+      return;
+    } else {
+      final model = Model(
+          name: _names,
+          age: _age,
+          student_id: _id,
+          batch: _batch,
+          picture: base64Image);
+      addStudent(model);
+      Navigator.pushNamed(context, '/home');
     }
   }
 }
