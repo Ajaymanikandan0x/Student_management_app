@@ -241,7 +241,7 @@ class _AdduserState extends State<Adduser> {
     }
   }
 
-  Future<void> add_student(context) async {
+  Future<void> add_student(BuildContext context) async {
     final _names = name.text.trim();
     final _age = int.parse(age.text);
     final _id = int.parse(id.text);

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:student_app/pages/studentinfo.dart';
 
 import '../../db/fuctions/functions.dart';
 import '../../db/model.dart';
@@ -9,7 +10,6 @@ import '../../db/model.dart';
 class Userlist extends StatelessWidget {
   const Userlist({Key? key}) : super(key: key);
 
-  @override
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Model>>(
@@ -33,18 +33,38 @@ class Userlist extends StatelessWidget {
                   final data = studentList[index];
 
                   return ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StudentInfo(
+                            id: data.id,
+                            selectimg: data.picture!,
+                            name: data.name!,
+                            age: data.age!,
+                            student_id: data.student_id!,
+                            batch: data.batch!,
+                          ),
+                        ),
+                      );
+                    },
                     leading: CircleAvatar(
                       backgroundImage: MemoryImage(
                         Uint8List.fromList(
                           base64Decode(data.picture!),
                         ),
                       ),
-                      maxRadius: 20,
+                      maxRadius: 40,
                     ),
-                    title: Text(data.name ?? "No name"),
+                    title: Text(data.name ?? "No name",
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 1.3,
+                        )),
                     subtitle: Text(data.student_id.toString()),
                     trailing: IconButton(
-                      icon: Icon(Icons.delete),
+                      icon: const Icon(Icons.delete),
                       onPressed: () {
                         showAlert(context, data.student_id);
                       },
@@ -63,7 +83,7 @@ class Userlist extends StatelessWidget {
     );
   }
 
-  void showAlert(context, id) => showDialog(
+  void showAlert(BuildContext context, var id) => showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text(
