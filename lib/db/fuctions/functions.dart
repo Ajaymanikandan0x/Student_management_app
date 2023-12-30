@@ -13,10 +13,14 @@ Future<Database> database() async {
   return db;
 }
 
-Future<List<Model>> getAllStudents() async {
+Future<List<Model>> getAllStudents({String? searchName}) async {
   final db = await database();
-  final List<Map<String, dynamic>> maps = await db.query('student_db',
-      columns: ['id', 'name', 'age', 'student_id', 'batch', 'picture']);
+  final List<Map<String, dynamic>> maps = await db.query(
+    'student_db',
+    columns: ['id', 'name', 'age', 'student_id', 'batch', 'picture'],
+    where: searchName != null ? 'name LIKE ?' : null,
+    whereArgs: searchName != null ? ['%$searchName%'] : null,
+  );
   final List<Model> templist = [];
   maps.forEach((element) {
     templist.add(Model.fromMap(element));
@@ -41,10 +45,9 @@ Future<void> addStudent(Model student) async {
 Future<void> deleteStudent(int studentId) async {
   try {
     final db = await database();
-    await db
-        .rawDelete('DELETE FROM student_db WHERE student_id = ?', [studentId]);
-    studentNotifier.value.removeWhere((student) =>
-        student.student_id == studentId); // Remove from existing list
+    await db.rawDelete('DELETE FROM student_db WHERE id = ?', [studentId]);
+    studentNotifier.value.removeWhere(
+        (student) => student.id == studentId); // Remove from existing list
     studentNotifier.notifyListeners();
   } catch (e) {
     print("Error deleting student: ${e.toString()}");

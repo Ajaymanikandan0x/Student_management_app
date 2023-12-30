@@ -19,7 +19,7 @@ class _AdduserState extends State<Adduser> {
 
   final age = TextEditingController();
 
-  final id = TextEditingController();
+  final student_id = TextEditingController();
 
   final batch = TextEditingController();
 
@@ -27,6 +27,7 @@ class _AdduserState extends State<Adduser> {
 
   File? selectimg;
   String? base64Image;
+  bool isImageSelected = false;
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +51,14 @@ class _AdduserState extends State<Adduser> {
                 child: CircleAvatar(
                   maxRadius: 80,
                   foregroundColor: Colors.blueGrey,
-                  child: selectimg != null
-                      ? Image.file(selectimg!)
-                      : const Padding(
+                  backgroundImage:
+                      selectimg != null ? FileImage(selectimg!) : null,
+                  child: selectimg == null
+                      ? const Padding(
                           padding: EdgeInsets.all(20),
-                          child: Icon(Icons.person)),
+                          child: Icon(Icons.person),
+                        )
+                      : null, // Remove this child if a placeholder isn't needed
                 ),
               ),
               sizedbox,
@@ -89,6 +93,7 @@ class _AdduserState extends State<Adduser> {
                   SizedBox(
                     width: 120,
                     child: TextFormField(
+                      keyboardType: TextInputType.number,
                       style: const TextStyle(
                         letterSpacing: 2,
                         color: Colors.black,
@@ -149,6 +154,7 @@ class _AdduserState extends State<Adduser> {
               ),
               sizedbox,
               TextFormField(
+                  keyboardType: TextInputType.number,
                   style: const TextStyle(
                     letterSpacing: 2,
                     color: Colors.black,
@@ -161,7 +167,7 @@ class _AdduserState extends State<Adduser> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  controller: id,
+                  controller: student_id,
                   validator: (value) {
                     if (value == null) {
                       return "Please enter an ID";
@@ -227,6 +233,12 @@ class _AdduserState extends State<Adduser> {
 
       if (imageselect == null) {
         // No image selected
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please select an image'),
+          ),
+        );
         return;
       }
       Uint8List imageBytes =
@@ -235,6 +247,7 @@ class _AdduserState extends State<Adduser> {
       setState(() {
         selectimg = File(imageselect.path);
         this.base64Image = base64Image;
+        isImageSelected = true;
       });
     } catch (e) {
       print("Error picking image: $e");
@@ -244,9 +257,16 @@ class _AdduserState extends State<Adduser> {
   Future<void> add_student(BuildContext context) async {
     final _names = name.text.trim();
     final _age = int.parse(age.text);
-    final _id = int.parse(id.text);
+    final _id = int.parse(student_id.text);
     final _batch = batch.text;
-    if (_names.isEmpty && _age == null && _id == null && _batch.isEmpty) {
+    if (base64Image == null || base64Image!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.grey,
+          content: Text('Error picking image. Please try again',
+              style: TextStyle(color: Colors.red)),
+        ),
+      );
       return;
     } else {
       final model = Model(
@@ -255,8 +275,8 @@ class _AdduserState extends State<Adduser> {
           student_id: _id,
           batch: _batch,
           picture: base64Image);
-      addStudent(model);
-      Navigator.pushNamed(context, '/home');
+      await addStudent(model);
+      Navigator.pushReplacementNamed(context, '/home');
     }
   }
 }

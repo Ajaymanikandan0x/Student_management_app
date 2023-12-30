@@ -1,12 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-
+import 'package:image_picker/image_picker.dart';
 import '../db/fuctions/functions.dart';
 import '../db/model.dart';
 
-class StudentInfo extends StatelessWidget {
-  final String selectimg;
+class StudentInfo extends StatefulWidget {
+  late final String selectimg;
   final String name;
   final int student_id;
   final int age;
@@ -15,10 +16,12 @@ class StudentInfo extends StatelessWidget {
 
   // Separate controllers for each text field
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
-  final TextEditingController idController = TextEditingController();
-  final TextEditingController batchController = TextEditingController();
 
+  final TextEditingController ageController = TextEditingController();
+
+  final TextEditingController idController = TextEditingController();
+
+  final TextEditingController batchController = TextEditingController();
   StudentInfo({
     required this.selectimg,
     required this.name,
@@ -33,6 +36,16 @@ class StudentInfo extends StatelessWidget {
     idController.text = student_id.toString();
     batchController.text = batch;
   }
+
+  @override
+  State<StudentInfo> createState() => _StudentInfoState();
+
+  static Widget sizeBox = const SizedBox(height: 10);
+}
+
+class _StudentInfoState extends State<StudentInfo> {
+  File? newimg;
+  String? base64Image;
 
   @override
   Widget build(BuildContext context) {
@@ -50,39 +63,50 @@ class StudentInfo extends StatelessWidget {
           children: [
             const SizedBox(height: 20),
             // Use CircleAvatar properly
-            CircleAvatar(
-              radius: 80,
-              foregroundColor: Colors.blueGrey,
-              backgroundImage: selectimg != null
-                  ? MemoryImage(
-                      Uint8List.fromList(
-                        base64Decode(selectimg),
-                      ),
-                    )
-                  : null,
-              child: selectimg == null ? Icon(Icons.person) : null,
+            GestureDetector(
+              onTap: () {
+                _getImage();
+              },
+              child: CircleAvatar(
+                radius: 80,
+                foregroundColor: Colors.blueGrey,
+                backgroundImage: widget.selectimg != null
+                    ? MemoryImage(
+                        Uint8List.fromList(
+                          base64Decode(widget.selectimg),
+                        ),
+                      )
+                    : newimg != null
+                        ? MemoryImage(
+                            base64Decode(base64Image!),
+                          )
+                        : null,
+                child: widget.selectimg == null && newimg == null
+                    ? Icon(Icons.person)
+                    : null,
+              ),
             ),
 
             const SizedBox(height: 20),
             TextField(
-              controller: nameController,
+              controller: widget.nameController,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            sizeBox,
+            StudentInfo.sizeBox,
             TextField(
-              controller: idController,
+              controller: widget.idController,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
-            sizeBox,
+            StudentInfo.sizeBox,
             TextField(
-              controller: ageController,
+              controller: widget.ageController,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
-            sizeBox,
+            StudentInfo.sizeBox,
             TextField(
-              controller: batchController,
+              controller: widget.batchController,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
@@ -108,15 +132,15 @@ class StudentInfo extends StatelessWidget {
                 ),
                 ElevatedButton.icon(
                   onPressed: () async {
+                    String updatedImage = base64Image ?? widget.selectimg;
                     final model = Model(
-                      id: id,
-                      name: nameController.text,
-                      age: int.parse(ageController.text),
-                      student_id: int.parse(idController.text),
-                      batch: batchController.text,
-                      picture: selectimg,
+                      id: widget.id,
+                      name: widget.nameController.text,
+                      age: int.parse(widget.ageController.text),
+                      student_id: int.parse(widget.idController.text),
+                      batch: widget.batchController.text,
+                      picture: updatedImage,
                     );
-                    print("Updating stu-model with id: ${model.id}");
                     await updateStudent(model);
                     Navigator.pop(context);
                   },
@@ -138,5 +162,25 @@ class StudentInfo extends StatelessWidget {
     );
   }
 
-  static Widget sizeBox = const SizedBox(height: 10);
+  Future<void> _getImage() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? imageselect =
+          await picker.pickImage(source: ImageSource.gallery);
+
+      if (imageselect == null) {
+        // No image selected
+        return;
+      }
+      Uint8List imageBytes =
+          await imageselect.readAsBytes(); // Use Uint8List for image bytes
+      String base64Image = base64Encode(imageBytes);
+      setState(() {
+        newimg = File(imageselect.path);
+        this.base64Image = base64Image;
+      });
+    } catch (e) {
+      print("Error picking image: $e");
+    }
+  }
 }
